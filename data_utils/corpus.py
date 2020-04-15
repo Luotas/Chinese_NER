@@ -21,10 +21,11 @@ from typing import Tuple, List
 
 import data_utils.utils as utils
 
+
 class DataReader:
 
     @staticmethod
-    def read_corpus(file):
+    def read_corpus(file:str) -> Tuple[List[List[str]], List[List[str]]]:
         x_data, y_data = [], []
 
         with open(file, 'r', encoding='utf-8') as fp:
@@ -34,7 +35,6 @@ class DataReader:
                 if len(line) == 1:
                     x_data.append(x)
                     y_data.append(y)
-
                     x, y = [], []
 
                 else:
@@ -47,8 +47,9 @@ class DataReader:
 
 class PeopelDailyCorpus():
 
+    #https://github.com/BrikerMan/Kashgari/tree/master/kashgari
     @staticmethod
-    def load_corpus(config, name):
+    def load_corpus(config, name: str) -> Tuple[List[List[str]], List[List[str]]]:
 
         file_dir = ''
         if name == 'train':
@@ -58,18 +59,9 @@ class PeopelDailyCorpus():
         elif name == 'test':
             file_dir = config.test_dir
 
-        x_data,y_data = DataReader.read_corpus(file_dir)
+        x_data, y_data = DataReader.read_corpus(file_dir)
 
         if config.shuffle:
-            x_data,y_data =utils.unison_shuffled_copies(x_data=x_data,y_data=y_data)
+            x_data, y_data = utils.unison_shuffled_copies(x_data=x_data, y_data=y_data)
 
-
-
-
-        return  x_data,y_data
-
-
-
-
-
-
+        return x_data, y_data
