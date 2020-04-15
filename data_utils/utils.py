@@ -19,7 +19,10 @@
 
 import random
 
-def shuffle(x_data, y_data):
+
+def unison_shuffled_copies(x_data, y_data):
+    assert len(x_data) == len(y_data), 'data length must equal label length.'
+
     data = list(zip(x_data, y_data))
     random.shuffle(data)
     x_data, y_data = zip(*data)

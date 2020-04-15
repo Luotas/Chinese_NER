@@ -21,7 +21,6 @@ from typing import Tuple, List
 
 import data_utils.utils as utils
 
-
 class DataReader:
 
     @staticmethod
@@ -62,7 +61,9 @@ class PeopelDailyCorpus():
         x_data,y_data = DataReader.read_corpus(file_dir)
 
         if config.shuffle:
-            x_data,y_data =utils.shuffle(x_data=x_data,y_data=y_data)
+            x_data,y_data =utils.unison_shuffled_copies(x_data=x_data,y_data=y_data)
+
+
 
 
         return  x_data,y_data
