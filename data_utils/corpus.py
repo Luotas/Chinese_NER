@@ -50,6 +50,12 @@ class PeopelDailyCorpus():
     #https://github.com/BrikerMan/Kashgari/tree/master/kashgari
     @staticmethod
     def load_corpus(config, name: str) -> Tuple[List[List[str]], List[List[str]]]:
+        '''
+
+        :param config:
+        :param name:
+        :return:
+        '''
 
         file_dir = ''
         if name == 'train':
