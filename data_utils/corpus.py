@@ -77,14 +77,3 @@ class PeopelDailyCorpus():
             x_data, y_data = utils.unison_shuffled_copies(x_data=x_data, y_data=y_data)
 
         return x_data, y_data
-
-
-    def load(self,name):
-        '''
-
-        Args:
-            name:
-
-        Returns:
-
-        '''
