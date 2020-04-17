@@ -19,7 +19,8 @@
 
 import torch
 import torch.nn as nn
-from transformers import BertForTokenClassification
+from transformers import BertForSequenceClassification, BertConfig
+from model.crf import CRF
 
 
 class SequenceLabel(nn.Module):
@@ -31,3 +32,24 @@ class SequenceLabel(nn.Module):
             kwargs:
 
         '''
+
+        # Bert
+        bert_config_path = config.bertConfig_path
+        bert_model_dir = config.bert_model_dir
+
+        # device
+        device = config.device
+
+        # label_num
+        num_labels = config.tag_size + 2 if config.use_crf else config.tag_size
+
+        # model
+
+        self.bertConfig = BertConfig.from_json_file(bert_config_path)
+        self.bertConfig.num_labels = num_labels
+        self.encoder = BertForSequenceClassification.from_pretrained(pretrained_model_name_or_path=bert_config_path,
+                                                                     config=self.bertConfig)
+
+        if config.use_crf:
+            args = {'device': device, 'tag_size': num_labels}
+            self.crf_layers = CRF(**args)

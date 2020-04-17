@@ -19,7 +19,7 @@
 
 from typing import Tuple, List
 
-import data_utils.utils as utils
+import common.utils as utils
 
 
 class DataReader:

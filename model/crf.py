@@ -22,8 +22,25 @@
 import torch
 import torch.nn as nn
 
+
 class CRF(nn.Module):
 
     def __init__(self,**kwargs):
 
         super(CRF,self).__init__()
+        for k in kwargs:
+            self.__setattr__(k,kwargs[k])
+
+        device = self.device
+        tag_size  = self.tag_size
+
+        # 定义转移矩阵
+
+        #
+
+        print('CRF Model')
+
+
+
+
+
