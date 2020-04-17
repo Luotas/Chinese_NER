@@ -19,13 +19,13 @@
 
 from typing import Tuple, List
 
-import data_utils.utils as utils
+import common.utils as utils
 
 
 class DataReader:
 
     @staticmethod
-    def read_corpus(file:str) -> Tuple[List[List[str]], List[List[str]]]:
+    def read_corpus(file: str) -> Tuple[List[List[str]], List[List[str]]]:
         x_data, y_data = [], []
 
         with open(file, 'r', encoding='utf-8') as fp:
@@ -47,14 +47,20 @@ class DataReader:
 
 class PeopelDailyCorpus():
 
-    #https://github.com/BrikerMan/Kashgari/tree/master/kashgari
+    # https://github.com/BrikerMan/Kashgari/tree/master/kashgari
     @staticmethod
     def load_corpus(config, name: str) -> Tuple[List[List[str]], List[List[str]]]:
         '''
+        加载人民日报语料数据。
+        Args:
+            config:配置参数，中包含 train_dir,dev_dir,test_dir,分别对应train,dev,test文件的目录
+            name:str,输入train、dev、test，表示读取train,dev,test文件。
 
-        :param config:
-        :param name:
-        :return:
+        Returns:
+            x_data:List[List[str]],[['把','欧','美','、','港','台',....],['在','夏','门','、','金','门',....]]
+
+            y_data:List[List[str]],[['O','B-LOC','B-LOC','O','B-LOC','B-LOC',....],['O','B-LOC','I-LOC','、','B-LOC','I-LOC',....]]
+
         '''
 
         file_dir = ''
