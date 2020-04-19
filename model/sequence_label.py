@@ -46,18 +46,16 @@ class SequenceLabel(nn.Module):
         num_labels = config.tag_size + 2 if config.use_crf else config.tag_size
 
         # model
-
         self.bertConfig = BertConfig.from_json_file(bert_config_path)
         self.bertConfig.num_labels = num_labels
         self.encoder = BertForSequenceClassification.from_pretrained(pretrained_model_name_or_path=bert_model_dir,
                                                                      config=self.bertConfig)
 
         if config.use_crf:
-            args = {'device': device, 'tag_size': num_labels}
+            args = {'device': device, 'target_size': num_labels}
             self.crf_layers = CRF(**args)
 
 
 
     def forward(self, input: Tensor):
         pass
-

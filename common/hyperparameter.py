@@ -20,3 +20,5 @@ import torch
 
 seed_num = 237
 cpu_device =torch.device('cpu')
+
+

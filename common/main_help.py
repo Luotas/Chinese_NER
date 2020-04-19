@@ -20,7 +20,6 @@
 from model.sequence_label import SequenceLabel
 from common.hyperparameter import cpu_device
 
-
 def load_model(config):
 
     model = SequenceLabel(config)
