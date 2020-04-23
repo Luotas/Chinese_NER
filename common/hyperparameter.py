@@ -19,6 +19,6 @@
 import torch
 
 seed_num = 237
-cpu_device =torch.device('cpu')
-
-
+pad = '_PAD_'
+unk = '_UNK_'
+cpu_device = torch.device('cpu')

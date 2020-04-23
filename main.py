@@ -23,7 +23,19 @@ import torch
 import config.config as configurable
 from data_utils.corpus import PeopelDailyCorpus
 from common.utils import download_pretrain_bert_model
-from common.main_help import load_model
+from common.main_help import *
+
+
+
+
+def deal_with_data(config):
+
+    trainloader,testloader = load_data(config)
+    for x ,y in trainloader:
+        print(x[:5])
+        print(y[:5])
+        break
+
 
 
 def parse_arguments():
@@ -35,12 +47,13 @@ def parse_arguments():
 
 if __name__ == '__main__':
     config = parse_arguments()
+    torch.manual_seed(hy.seed_num)
 
-    # x_data,y_data = PeopelDailyCorpus.load_corpus(config,'train')
-    #
-    # print(x_data[:5],y_data[:5])
+    if config.device != hy.cpu_device:
+        torch.cuda.manual_seed(hy.seed_num)
+
+    deal_with_data(config)
 
     download_pretrain_bert_model(config)
-    config.tag_size = 5
     model = load_model(config)
     print(model)

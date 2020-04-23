@@ -79,6 +79,21 @@ class Configruable(myconf):
         return self._config.get('Save', 'pkl_data')
 
     @property
+    def save_dict(self):
+        return self._config.getboolean('Save', 'save_dict')
+    @property
+    def dict_directory(self):
+        return self._config.get('Save', 'dict_directory')
+
+    @property
+    def word_dict(self):
+        return self._config.get('Save', 'word_dict')
+
+    @property
+    def label_dict(self):
+        return self._config.get('Save', 'label_dict')
+
+    @property
     def save_model(self):
         return self._config.getboolean('Save', 'save_model')
 
@@ -124,8 +139,8 @@ class Configruable(myconf):
         return self._config.getint('Train', 'epochs')
 
     @property
-    def batch_szie(self):
-        return self._config.getint('Train', 'batch_szie')
+    def batch_size(self):
+        return self._config.getint('Train', 'batch_size')
 
     @property
     def test_batch_size(self):
