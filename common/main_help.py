@@ -44,6 +44,7 @@ def load_tokenizer(config):
 
     return tokenizer
 
+
 def load_data(config):
     if not os.path.isdir(config.pkl_directory): os.makedirs(config.pkl_directory)
 
@@ -52,7 +53,6 @@ def load_data(config):
 
 
 def preprocessing(config):
-
     ''' 1.create tags\index map '''
     token2idx, idx2token, tag2idx, idx2tag = dump_tags(config)
     config.tag2idx = tag2idx
@@ -85,7 +85,7 @@ def preprocessing(config):
 
 def dump_tags(config):
     token2idx = {hy.pad: 0, hy.unk: 1}
-    tag2idx = {hy.pad: 0}
+    tag2idx = {hy.pad: 0, hy.csl: 1, hy.sep: 2}
     with open(config.train_dir, "r", encoding="utf-8") as fp:
         for cursor in fp.readlines():
             seq, tags = cursor.split(',')

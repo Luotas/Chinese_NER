@@ -19,6 +19,8 @@
 import torch
 
 seed_num = 237
-pad = '_PAD_'
-unk = '_UNK_'
+pad = '[PAD]'
+unk = '[UNK]'
+csl = "[CLS]"
+sep = "[SEP]"
 cpu_device = torch.device('cpu')
