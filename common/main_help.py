@@ -27,6 +27,7 @@ from common.hyperparameter import cpu_device
 
 from data_utils.sequence_label_dataset import SequenceLabelingDataset
 from torch.utils.data import DataLoader
+import transformers.tokenization_bert  as tokenization
 
 
 def load_model(config):
@@ -38,6 +39,11 @@ def load_model(config):
     return model
 
 
+def load_tokenizer(config):
+    tokenizer = tokenization.BertTokenizer(config.bert_vocab_path)
+
+    return tokenizer
+
 def load_data(config):
     if not os.path.isdir(config.pkl_directory): os.makedirs(config.pkl_directory)
 
@@ -46,6 +52,8 @@ def load_data(config):
 
 
 def preprocessing(config):
+
+    ''' 1.create tags\index map '''
     token2idx, idx2token, tag2idx, idx2tag = dump_tags(config)
     config.tag2idx = tag2idx
     config.idx2tag = idx2tag
@@ -54,14 +62,17 @@ def preprocessing(config):
 
     save_directionary(config, tag2idx, token2idx)
 
+    ''' 2. load bert tokenizer instance '''
+    config.tokenizer = load_tokenizer(config)
+
+    ''' 3. create train/test dataset'''
+
     trainset = SequenceLabelingDataset(config.train_dir)
     testset = SequenceLabelingDataset(config.test_dir)
+
+    ''' 4. initializion the dataloader for loop'''
     train_dataLoader = DataLoader(trainset, batch_size=config.batch_size, shuffle=True)
     test_dataloader = DataLoader(testset, batch_size=config.batch_size, shuffle=True)
-
-    # for x_data, labels in train_dataLoader:
-    #     print(x_data)
-    #     print(labels)
 
     print('******************************')
     print(f'tag_size:{config.tag_size}')

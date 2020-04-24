@@ -40,8 +40,8 @@ def download_pretrain_bert_model(config):
     print(path)
 
     config.bertConfig_path = os.path.join(sys.path[0], 'data', 'input', 'model', 'config.json')
-
     config.bert_model_dir = os.path.join(sys.path[0], 'data', 'input', 'model')
+    config.bert_vocab_path = os.path.join(sys.path[0], 'data', 'input', 'model', 'vocab.txt')
 
 
 def prepare_data(samples, vocab, config):
@@ -52,4 +52,5 @@ def prepare_data(samples, vocab, config):
     x_np = np.full((batch_size, max_size), fill_value=config.padID, dtype='int64')
     for i in range(batch_size):
         x_np[i, :sizes[i]] = [vocab[token] for token in samples[i]]
-    return torch.LongTensor(x_np.T).to(config.device)
+    return max_size, torch.LongTensor(x_np).to(config.device)
+

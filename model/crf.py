@@ -52,8 +52,8 @@ class CRF(nn.Module):
 
         Args:
             kwargs:
-            target_size(int):target size
-            device(torch.device):device type
+            target_size (int) :target size
+            device (torch.device) :device type
         '''
         super(CRF, self).__init__()
         for k in kwargs:
@@ -75,8 +75,8 @@ class CRF(nn.Module):
         '''
         Do the forward algorithm to compute the partition function(batched).
         Args:
-            feats:size = (batch_size,seq_len,target_size)
-            mask:size= (batch_size,seq_len)
+            feats (Tensor) :size = (batch_size,seq_len,target_size)
+            mask (Tensor) :size= (batch_size,seq_len)
 
         Returns:
 

@@ -24,6 +24,7 @@ import config.config as configurable
 from data_utils.corpus import PeopelDailyCorpus
 from common.utils import download_pretrain_bert_model
 from common.main_help import *
+from common.utils import prepare_data
 
 
 
@@ -32,8 +33,16 @@ def deal_with_data(config):
 
     trainloader,testloader = load_data(config)
     for x ,y in trainloader:
-        print(x[:5])
-        print(y[:5])
+        max_size,y = prepare_data(y,config.tag2idx,config)
+
+        print('*****************')
+        print(y.shape)
+        print(y)
+        mask = torch.ne(y,config.padID)
+        print(max_size)
+        print('*****************')
+        print(mask)
+        print(mask.long())
         break
 
 
@@ -52,8 +61,9 @@ if __name__ == '__main__':
     if config.device != hy.cpu_device:
         torch.cuda.manual_seed(hy.seed_num)
 
+    download_pretrain_bert_model(config)
     deal_with_data(config)
 
-    download_pretrain_bert_model(config)
-    model = load_model(config)
-    print(model)
+
+    # model = load_model(config)
+    # print(model)
