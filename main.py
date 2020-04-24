@@ -47,6 +47,7 @@ def deal_with_data(config):
 
 
 
+
 def parse_arguments():
     config_file = './config/config.cfg'
     config = configurable.Configruable(config_file=config_file)
