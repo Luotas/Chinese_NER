@@ -18,7 +18,13 @@
 # import lib
 
 
-def convert_examples_to_features(text_a,text_b,tonkenizer,max_len=110):
+
+
+
+def convert_examples_to_features(text_a,tonkenizer,max_len=110):
     pass
+
+
+
 
 

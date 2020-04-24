@@ -19,7 +19,7 @@
 import torch
 
 seed_num = 237
-pad = '[PAD]'
+pad = '[PAD]'   #
 unk = '[UNK]'
 csl = "[CLS]"
 sep = "[SEP]"
