@@ -24,28 +24,44 @@ import config.config as configurable
 from data_utils.corpus import PeopelDailyCorpus
 from common.utils import download_pretrain_bert_model
 from common.main_help import *
-from common.utils import prepare_data
+from trainer import Train
 
 
+def start_train(trainloader, testloader, model, config):
+    T = Train(trainloader=trainloader, testloader=testloader, model=model, config=config)
+    T.train()
 
 
-def deal_with_data(config):
+def main(config):
+    trainloader, testloader = load_data(config)
 
-    trainloader,testloader = load_data(config)
-    for x ,y in trainloader:
-        max_size,y = prepare_data(y,config.tag2idx,config)
+    model = load_model(config)
+    print(model)
 
-        print('*****************')
-        print(y.shape)
-        print(y)
-        mask = torch.ne(y,config.padID)
-        print(max_size)
-        print('*****************')
-        print(mask)
-        print(mask.long())
-        break
+    start_train(trainloader, testloader, model, config)
 
 
+# def deal_with_data(config):
+#     trainloader, testloader = load_data(config)
+#     for x, y in trainloader:
+#         max_size, y = prepare_data(y, config.tag2idx, config)    #
+#
+#     a, b, c = convert_examples_to_features(x[:1], None, config.tokenizer, seq_length=max_size)
+#
+#     print(x[0])
+#     print(len(list(x[0].strip().split(" "))))
+#     print(a)
+#     print(b)
+# #     print(c)
+# #     print('*****************')
+# #     print(y.shape)
+#     print(y)
+# #     mask = torch.ne(y, config.padID)
+# #     print(max_size)
+# #     print('*****************')
+# #     print(mask)
+# #     print(mask.long())
+#     break
 
 
 def parse_arguments():
@@ -63,8 +79,8 @@ if __name__ == '__main__':
         torch.cuda.manual_seed(hy.seed_num)
 
     download_pretrain_bert_model(config)
-    deal_with_data(config)
 
+    main(config)
 
     # model = load_model(config)
     # print(model)

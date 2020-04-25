@@ -48,9 +48,13 @@ def prepare_data(samples, vocab, config):
     samples = list(map(lambda s: s.strip().split(" "), samples))
     batch_size = len(samples)
     sizes = [len(s) for s in samples]
-    max_size = max(sizes)
+    max_size = max(sizes)+2
     x_np = np.full((batch_size, max_size), fill_value=config.padID, dtype='int64')
     for i in range(batch_size):
-        x_np[i, :sizes[i]] = [vocab[token] for token in samples[i]]
-    return max_size, torch.LongTensor(x_np).to(config.device)
+        x_np[i, 0] = vocab['[CLS]']
+        x_np[i, 1:sizes[i] + 1] = [vocab[token] for token in samples[i]]
+        x_np[i, sizes[i] + 1] = vocab['[SEP]']
 
+        # x_np[i, :sizes[i]] = [vocab[token] for token in samples[i]]
+
+    return max_size, torch.LongTensor(x_np).to(config.device)

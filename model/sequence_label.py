@@ -20,7 +20,7 @@
 import torch
 from torch import Tensor
 import torch.nn as nn
-from transformers import BertForSequenceClassification, BertConfig
+from transformers import BertForTokenClassification, BertConfig
 from model.crf import CRF
 
 
@@ -33,7 +33,7 @@ class SequenceLabel(nn.Module):
             kwargs:
 
         '''
-        super(SequenceLabel,self).__init__()
+        super(SequenceLabel, self).__init__()
 
         # Bert
         bert_config_path = config.bertConfig_path
@@ -48,14 +48,14 @@ class SequenceLabel(nn.Module):
         # model
         self.bertConfig = BertConfig.from_json_file(bert_config_path)
         self.bertConfig.num_labels = num_labels
-        self.encoder = BertForSequenceClassification.from_pretrained(pretrained_model_name_or_path=bert_model_dir,
+        self.encoder = BertForTokenClassification.from_pretrained(pretrained_model_name_or_path=bert_model_dir,
                                                                      config=self.bertConfig)
 
         if config.use_crf:
-            args = {'device': device, 'target_size': num_labels}
-            self.crf_layers = CRF(**args)
+            args = {'device': device, 'target_size':config.tag_size}
+            self.crf_layer = CRF(**args)
 
+    def forward(self, input_ids,  token_type_ids,position_ids):
+        logit = self.encoder(input_ids=input_ids, token_type_ids=token_type_ids,position_ids=position_ids)
 
-
-    def forward(self, input: Tensor):
-        pass
+        return logit

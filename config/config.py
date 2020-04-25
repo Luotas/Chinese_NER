@@ -81,6 +81,7 @@ class Configruable(myconf):
     @property
     def save_dict(self):
         return self._config.getboolean('Save', 'save_dict')
+
     @property
     def dict_directory(self):
         return self._config.get('Save', 'dict_directory')
@@ -109,24 +110,36 @@ class Configruable(myconf):
     @property
     def use_crf(self):
         return self._config.getboolean('Model', 'use_crf')
+    @property
+    def average_batch(self):
+        return self._config.getboolean('Model', 'average_batch')
 
     # Optimizer
 
     @property
+    def bert_learning_rate(self):
+        return self._config.getfloat('Optimizer', 'bert_learning_rate')
+
+
+    @property
     def learning_rate(self):
-        return self._config.getfloat('Optimizier', 'learning_rate')
+        return self._config.getfloat('Optimizer', 'learning_rate')
 
     @property
     def weight_decay(self):
-        return self._config.getfloat('Optimizier', 'weight_decay')
+        return self._config.getfloat('Optimizer', 'weight_decay')
+
+    @property
+    def eps(self):
+        return self._config.getfloat('Optimizer', 'eps')
 
     @property
     def use_lr_decay(self):
-        return self._config.getboolean('Optimizier', 'use_lr_decay')
+        return self._config.getboolean('Optimizer', 'use_lr_decay')
 
     @property
     def lr_rate_decay(self):
-        return self._config.getfloat('Optimizier', 'lr_rate_decay')
+        return self._config.getfloat('Optimizer', 'lr_rate_decay')
 
     @property
     def min_lrate(self):
@@ -147,8 +160,8 @@ class Configruable(myconf):
         return self._config.getint('Train', 'test_batch_size')
 
     @property
-    def backward_batch_count(self):
-        return self._config.getint('Train', 'backward_batch_count')
+    def backward_batch_size(self):
+        return self._config.getint('Train', 'backward_batch_size')
 
     @property
     def log_interval(self):
