@@ -19,8 +19,15 @@
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from transformers import BertPreTrainedModel, BertModel
-from model.crf import CRF
+from model.crf import CRF1
+
+# torch.log_softmax()
+
+# def log_softmax(self: Tensor, dim: _int, dtype: Optional[_dtype]=None)
+# def log_softmax(input, dim=None, _stacklevel=3, dtype=None):
+log_soft = F.log_softmax
 
 
 class Bert_CRF(BertPreTrainedModel):
@@ -33,10 +40,25 @@ class Bert_CRF(BertPreTrainedModel):
         self.classifier = nn.Linear(config.hidden_size, self.num_labels)
         self.init_weights()
 
-        self.crf = CRF(self.num_labels, batch_first=True)
+        self.crf = CRF1(self.num_labels, batch_first=True)
 
     def forward(self,
-                input_ids=None,
-                attention_mask=None,
-                token_type_ids=None, ):
-        pass
+                input_ids,
+                attention_mask,
+                token_type_ids=None,
+                labels=None):
+        outputs = self.bert(input_ids=input_ids,
+                            attention_mask=attention_mask,
+                            token_type_ids=token_type_ids, )
+
+        sequence_output = outputs[0]
+        sequence_output = self.dropout(sequence_output)
+        emission = self.classifier(sequence_output)
+        attn_mask = attention_mask.type(torch.uint8)
+
+        if labels is not None:
+            loss = -self.crf(log_soft(emission, 2), labels, mask=attn_mask, reduction='mean')
+            return loss
+        else:
+            prediction = self.crf.decode(emission, mask=attn_mask)
+            return prediction

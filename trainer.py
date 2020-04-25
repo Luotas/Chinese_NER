@@ -103,7 +103,10 @@ class Train:
 
                 input_ids, input_mask, type_ids, tags, mask = self._get_model_args(batch_data, tags, self.config)
 
-                (logit,) = self.model(input_ids=input_ids, token_type_ids=type_ids, position_ids=input_mask)
+                (logit,) = self.model(input_ids=input_ids,
+                                      attention_mask=input_mask,
+                                      token_type_ids=type_ids, )
+
                 loss = self._calculate_loss(feats=logit, mask=mask, tags=tags)
                 loss.backward()
 

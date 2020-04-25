@@ -55,7 +55,9 @@ class SequenceLabel(nn.Module):
             args = {'device': device, 'target_size':config.tag_size}
             self.crf_layer = CRF(**args)
 
-    def forward(self, input_ids,  token_type_ids,position_ids):
-        logit = self.encoder(input_ids=input_ids, token_type_ids=token_type_ids,position_ids=position_ids)
+    def forward(self, input_ids, attention_mask, token_type_ids):
+        logit = self.encoder(input_ids=input_ids,
+                             attention_mask=attention_mask,
+                             token_type_ids=token_type_ids,)
 
         return logit
