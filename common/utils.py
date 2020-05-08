@@ -35,9 +35,9 @@ def unison_shuffled_copies(x_data, y_data):
 
 def download_pretrain_bert_model(config):
     # 必须使用该方法下载模型，然后加载
-    from flyai.utils import remote_helper
-    path = remote_helper.get_remote_date('https://www.flyai.com/m/RoBERTa_zh_L12_PyTorch.zip')
-    print(path)
+    # from flyai.utils import remote_helper
+    # path = remote_helper.get_remote_date('https://www.flyai.com/m/RoBERTa_zh_L12_PyTorch.zip')
+    # print(path)
 
     config.bertConfig_path = os.path.join(sys.path[0], 'data', 'input', 'model', 'config.json')
     config.bert_model_dir = os.path.join(sys.path[0], 'data', 'input', 'model')

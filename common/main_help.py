@@ -83,18 +83,26 @@ def preprocessing(config):
     return train_dataLoader, test_dataloader
 
 
+from collections import OrderedDict
+
+
 def dump_tags(config):
     token2idx = {hy.pad: 0, hy.unk: 1}
-    tag2idx = {hy.pad: 0, hy.csl: 1, hy.sep: 2}
+    # tag2idx = {hy.pad: 0, hy.csl: 1, hy.sep: 2}
+
+    label_set = []
+
     with open(config.train_dir, "r", encoding="utf-8") as fp:
         for cursor in fp.readlines():
             seq, tags = cursor.split(',')
             for tok in seq.split():
                 if tok not in token2idx:
                     token2idx[tok] = len(token2idx)
+
             for tag in tags.split():
-                if tag not in tag2idx:
-                    tag2idx[tag] = len(tag2idx)
+                # if tag not in tag2idx:
+                #     tag2idx[tag] = len(tag2idx)
+                label_set.append(tag)
 
     with open(config.test_dir, "r", encoding="utf-8") as fp:
         for cursor in fp.readlines():
@@ -103,8 +111,15 @@ def dump_tags(config):
                 if tok not in token2idx:
                     token2idx[tok] = len(token2idx)
             for tag in tags.split():
-                if tag not in tag2idx:
-                    tag2idx[tag] = len(tag2idx)
+                # if tag not in tag2idx:
+                #     tag2idx[tag] = len(tag2idx)
+                label_set.append(tag)
+
+    label_set = list(OrderedDict.fromkeys(label_set))
+
+    label_set.append('X')
+
+    tag2idx = {t: i for i, t in enumerate(label_set)}
 
     idx2tag = {}
     for k, v in tag2idx.items():

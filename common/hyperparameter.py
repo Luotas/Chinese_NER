@@ -3,7 +3,11 @@
 
 # @File    :   hyperparameter.py
 # @Contact :   aleaho@live.com
-# @License :   
+# @License :
+def load_tokenizer(config):
+    tokenizer = tokenization.BertTokenizer(config.bert_vocab_path)
+
+    return tokenizer
 
 # @Modify Time      @Author    @Version    
 # ------------      -------    --------    
