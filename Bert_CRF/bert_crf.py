@@ -1,8 +1,5 @@
 #!/usr/bin/env python
 # coding: utf-8
-
-# https://github.com/Dhanachandra/bert_crf
-
 __author__ = 'Dhanachandra N.'
 
 #from __future__ import unicode_literals, print_function, division
@@ -156,7 +153,7 @@ class Bert_CRF(BertPreTrainedModel):
             prediction = self.crf.decode(emission, mask=attn_masks)
             return prediction
 
-def generate_training_data(config, bert_tokenizer="bert-base", do_lower_case=True):
+def generate_train_data(config, bert_tokenizer="bert-base", do_lower_case=True):
     training_data, validation_data = config.data_dir+config.training_data, config.data_dir+config.val_data 
     train_sentences, train_labels, label_set = corpus_reader(training_data, delim=' ')
     label_set.append('X')
