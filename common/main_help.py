@@ -86,6 +86,14 @@ def preprocessing(config):
 
 
 def pad(batch):
+    '''
+
+    Args:
+        batch:
+
+    Returns:
+
+    '''
     '''Pads to the longest sample'''
     get_element = lambda x: [sample[x] for sample in batch]
     seq_len = get_element(1)
@@ -111,6 +119,17 @@ def pad(batch):
 
 
 def generate_data(config, dataset_dir, tag2idx, batch_szie):
+    '''
+    生成数据。
+    Args:
+        config:         配置信息集合
+        dataset_dir:    数据集路径
+        tag2idx:        标签与编码的对应字典
+        batch_szie:
+
+    Returns:
+
+    '''
     dataset = NER_Dataset(file_path=dataset_dir,
                           tag2idx=tag2idx,
                           tokenizer_path=config.bert_vocab_path)

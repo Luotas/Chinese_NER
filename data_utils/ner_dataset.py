@@ -20,10 +20,11 @@
 import torch.utils.data as data
 from transformers.tokenization_bert import BertTokenizer
 import linecache
-import common.hyperparameter  as hy
+import common.hyperparameter as hy
 
 
 class NER_Dataset(data.Dataset):
+
     def __init__(self, file_path, tag2idx, tokenizer_path='', do_lower_case=True):
         self.tag2idx = tag2idx
         self.tokenizer = BertTokenizer.from_pretrained(tokenizer_path, do_lower_case=do_lower_case)
@@ -41,7 +42,6 @@ class NER_Dataset(data.Dataset):
         line = linecache.getline(self._file_path, idx + 1)
         _sentence, _label = line.strip().split(",")
         _sentence, _label = _sentence.split(), _label.split()
-
 
         label = []
         for x in _label:
