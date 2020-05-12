@@ -166,7 +166,9 @@ class Train:
             if not os.path.isdir(self.config.apr_dir):
                 os.mkdir(self.config.apr_dir)
 
-            writer = open(os.path.join(self.config.apr_dir, 'prediction_' + str(epoch) + '.csv'), 'w', encoding='utf-8')
+            predict_file = os.path.join(self.config.apr_dir, 'prediction_' + str(epoch) + '.csv')
+
+            writer = open(predict_file, 'w', encoding='utf-8')
             for i, batch in enumerate(self.test_iter):
                 token_ids, attn_mask, org_tok_map, labels, original_token, sorted_idx = batch
                 # attn_mask.dt
@@ -201,7 +203,7 @@ class Train:
             validation_loss.append(val_loss / len(self.test_iter))
             writer.flush()
             print('Epoch: ', epoch)
-            command = "python conlleval.py < " + self.config.apr_dir + "prediction_" + str(epoch) + ".csv"
+            command = "python conlleval.py < " + predict_file
             process = subprocess.Popen(command, stdout=subprocess.PIPE, shell=True)
             result = process.communicate()[0].decode("utf-8")
             print(result)
