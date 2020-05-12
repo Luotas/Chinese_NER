@@ -106,6 +106,10 @@ class Configruable(myconf):
     def model_name(self):
         return self._config.get('Save', 'model_name')
 
+    @property
+    def apr_dir(self):
+        return self._config.get('Save', 'apr_dir')
+
     # Model
     @property
     def use_crf(self):
@@ -114,11 +118,15 @@ class Configruable(myconf):
     def average_batch(self):
         return self._config.getboolean('Model', 'average_batch')
 
+    @property
+    def gradient_acc_steps(self):
+        return self._config.getint('Model', 'gradient_acc_steps')
+
     # Optimizer
 
     @property
-    def bert_learning_rate(self):
-        return self._config.getfloat('Optimizer', 'bert_learning_rate')
+    def crf_learning_rate(self):
+        return self._config.getfloat('Optimizer', 'crf_learning_rate')
 
 
     @property

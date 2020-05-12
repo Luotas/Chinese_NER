@@ -16,14 +16,18 @@
 """
 
 # import lib
-
-from common.utils import prepare_data
-from common.extract_features import convert_examples_to_features
-import torch.optim as optim
-import torch.nn as nn
 import torch
+from tqdm import tqdm, trange
+from common.utils import prepare_data
+import timeit
+import datetime
+import subprocess
+import common.hyperparameter  as hy
 
-import time
+import os
+import shutil
+
+from transformers.optimization import AdamW, get_linear_schedule_with_warmup
 
 
 class Train:
@@ -33,8 +37,8 @@ class Train:
 
         Args:
             kwargs:
-                trainloader : train data loader
-                testloader  : test data loader
+                train_iter : train data iter
+                train_iter  : test data iter
                 model       : nn model
                 config      : config
 
@@ -42,32 +46,15 @@ class Train:
 
         print('Training Starting.....')
 
-        self.trainloader = kwargs['trainloader']
-        self.testloader = kwargs['testloader']
+        self.train_iter = kwargs['train_iter']
+        self.test_iter = kwargs['test_iter']
         self.model = kwargs['model']
         self.config = kwargs['config']
         self.use_crf = self.config.use_crf
         self.average_batch = self.config.average_batch
-        self.optimizer = optim.Adam([{'params': self.model.encoder.parameters(), 'lr': self.config.bert_learning_rate},
-                                     {'params': self.model.crf_layer.parameters()}],
-                                    lr=self.config.learning_rate,
-                                    weight_decay=self.config.weight_decay, eps=self.config.eps)
-        self.loss_function = self.model.crf_layer.neg_log_likelihood_loss
-
-    @staticmethod
-    def _get_model_args(data, tags, config):
-        max_size, tags = prepare_data(tags, config.tag2idx, config)
-
-        input_ids, input_mask, input_type_ids = convert_examples_to_features(data=data, config=config,
-                                                                             seq_length=max_size)
-
-        mask = torch.ne(tags, config.padID).to(config.device)
-
-        input_ids = torch.tensor(input_ids, dtype=torch.long, device=config.device)
-        input_mask = torch.tensor(input_mask, dtype=torch.long, device=config.device)
-        input_type_ids = torch.tensor(input_type_ids, dtype=torch.long, device=config.device)
-
-        return input_ids, input_mask, input_type_ids, tags, mask
+        self.t_total = len(self.train_iter) // self.config.gradient_acc_steps * self.config.epochs
+        self.optimizer = self._get_optimizer()
+        self.scheduler = self._get_scheduler()
 
     def _optimizer_batch_step(self, config, backward_count):
         """
@@ -88,28 +75,148 @@ class Train:
 
         return loss_value
 
+    def _get_optimizer(self):
+
+        no_decay = ['bias', 'LayerNorm.weight']
+        optimizer_grouped_parameters = [
+            {
+                "params": [p for n, p in self.model.named_parameters() if not any(nd in n for nd in no_decay)],
+                "weight_decay": 0.0,
+            },
+            {"params": [p for n, p in self.model.named_parameters() if any(nd in n for nd in no_decay)],
+             "weight_decay": 0.0},
+        ]
+        optimizer = AdamW( optimizer_grouped_parameters,lr=self.config.learning_rate, eps=self.config.eps)
+
+        # optimizer = AdamW([{'params': self.model.bert.parameters()},
+        #                    {'params': self.model.classifier.parameters()},
+        #                    {'params': self.model.crf.parameters(), 'lr': self.config.crf_learning_rate}],
+        #                   lr=self.config.learning_rate, eps=self.config.eps)
+
+        return optimizer
+
+    def _get_scheduler(self):
+        scheduler = get_linear_schedule_with_warmup(self.optimizer, num_warmup_steps=0, num_training_steps=self.t_total)
+
+        return scheduler
+
     def train(self):
-        epochs = self.config.epochs
-        new_lr = self.config.learning_rate
 
-        for epoch in range(1, epochs + 1):
-            start_time = time.time()
+        unique_labels = list(self.config.tag2idx.keys())
+
+        device = self.config.device
+        global_step = 0
+
+        for param in list(self.model.parameters())[:-21]:
+            param.requires_grad = False
+
+        for name, param in self.model.named_parameters():
+            print(name, param.requires_grad)
+
+        self.model.zero_grad()
+        self.model.train()
+        training_loss = []
+        validation_loss = []
+        train_iterator = trange(self.config.epochs, desc="Epoch", disable=0)
+        start_time = timeit.default_timer()
+
+        for epoch in (train_iterator):
+            epoch_iterator = tqdm(self.train_iter, desc="Iteration", disable=-1)
+            tr_loss = 0.0
+            tmp_loss = 0.0
             self.model.train()
-            self.optimizer.zero_grad()
-            backward_count = 0
+            for step, batch in enumerate(epoch_iterator):
+                s = timeit.default_timer()
+                token_ids, attn_mask, _, labels, _, _ = batch
+                # print(labels)
+                inputs = {'input_ids': token_ids.to(device),
+                          'attention_mask': attn_mask.to(device),
+                          'token_type_ids': None,
+                          'labels': labels.to(device)
+                          }
 
-            for batch_data, tags in self.trainloader:
-                backward_count += 1
-
-                input_ids, input_mask, type_ids, tags, mask = self._get_model_args(batch_data, tags, self.config)
-
-                (logit,) = self.model(input_ids=input_ids,
-                                      attention_mask=input_mask,
-                                      token_type_ids=type_ids, )
-
-                loss = self._calculate_loss(feats=logit, mask=mask, tags=tags)
+                loss = self.model(**inputs)
                 loss.backward()
+                loss.detach()
+                tmp_loss += loss.item()
+                tr_loss += loss.item()
+                if (step + 1) % 1 == 0:
+                    self.optimizer.step()
+                    self.scheduler.step()  # Update learning rate schedule
+                    self.model.zero_grad()
+                    global_step += 1
+                if step == 0:
+                    print('\n%s Step: %d of %d Loss: %f' % (
+                        str(datetime.datetime.now()), (step + 1), len(epoch_iterator), loss.item()))
+                if (step + 1) % self.config.log_interval == 0:
+                    print('%s Step: %d of %d Loss: %f' % (
+                        str(datetime.datetime.now()), (step + 1), len(epoch_iterator), tmp_loss / 1000))
+                    tmp_loss = 0.0
 
-                self._optimizer_batch_step(self.config, backward_count)
+            print("Training Loss: %f for epoch %d" % (tr_loss / len(self.train_iter), epoch))
+            training_loss.append(tr_loss / len(self.train_iter))
 
-                print(f'loss:{loss.detach().item()}')
+            # '''
+            # Y_pred = []
+            # Y_true = []
+
+            val_loss = 0.0
+            self.model.eval()
+
+            if not os.path.isdir(self.config.apr_dir):
+                shutil.rmtree(self.config.apr_dir)
+
+            writer = open(os.path.join(self.config.apr_dir, 'prediction_' + str(epoch) + '.csv'), 'w', encoding='utf-8')
+            for i, batch in enumerate(self.test_iter):
+                token_ids, attn_mask, org_tok_map, labels, original_token, sorted_idx = batch
+                # attn_mask.dt
+                inputs = {'input_ids': token_ids.to(device),
+                          'attention_mask': attn_mask.to(device),
+                          'token_type_ids': None,
+                          }
+
+                dev_inputs = {'input_ids': token_ids.to(device),
+                              'attention_mask': attn_mask.to(device),
+                              'token_type_ids': None,
+                              'labels': labels.to(device)
+                              }
+                with torch.torch.no_grad():
+                    tag_seqs = self.model(**inputs)
+                    tmp_eval_loss = self.model(**dev_inputs)
+                val_loss += tmp_eval_loss.item()
+                # print(labels.numpy())
+                y_true = list(labels.cpu().numpy())
+                for i in range(len(sorted_idx)):
+                    o2m = org_tok_map[i]
+                    pos = sorted_idx.index(i)
+                    for j, orig_tok_idx in enumerate(o2m):
+                        writer.write(original_token[i][j] + '\t')
+                        writer.write(unique_labels[y_true[pos][orig_tok_idx]] + '\t')
+                        pred_tag = unique_labels[tag_seqs[pos][orig_tok_idx]]
+                        if pred_tag == hy.x:
+                            pred_tag = 'O'
+                        writer.write(pred_tag + '\n')
+                    writer.write('\n')
+
+            validation_loss.append(val_loss / len(self.test_iter))
+            writer.flush()
+            print('Epoch: ', epoch)
+            command = "python conlleval.py < " + self.config.apr_dir + "prediction_" + str(epoch) + ".csv"
+            process = subprocess.Popen(command, stdout=subprocess.PIPE, shell=True)
+            result = process.communicate()[0].decode("utf-8")
+            print(result)
+
+            writer = open(os.path.join(self.config.apr_dir, 'result' + str(epoch) + '.text'), 'w', encoding='utf-8')
+            writer.write(result)
+            writer.flush()
+
+            torch.save({
+                'epoch': epoch,
+                'model_state_dict': self.model.state_dict(),
+                'optimizer_state_dict': self.optimizer.state_dict(),
+                'loss': tr_loss / len(self.train_iter),
+            }, self.config.apr_dir + 'model_' + str(epoch) + '.pt')
+
+        total_time = timeit.default_timer() - start_time
+        print('Total training time: ', total_time)
+        return training_loss, validation_loss

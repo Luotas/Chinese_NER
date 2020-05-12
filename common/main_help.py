@@ -25,15 +25,16 @@ import torch
 
 import common.hyperparameter as hy
 
-from model.sequence_label import SequenceLabel
 from common.hyperparameter import cpu_device
 from data_utils.ner_dataset import NER_Dataset
 import torch.utils.data as data
 
+from model.bert_crf import Bert_CRF
 
 
 def load_model(config):
-    model = SequenceLabel(config)
+
+    model = Bert_CRF.from_pretrained(config.bert_model_dir,num_labels = len(config.tag2idx))
 
     if config.device != cpu_device:
         model = model.to(device=config.device)
@@ -41,10 +42,6 @@ def load_model(config):
     return model
 
 
-def load_tokenizer(config):
-    tokenizer = tokenization.BertTokenizer(config.bert_vocab_path)
-
-    return tokenizer
 
 
 def load_data(config):

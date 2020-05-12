@@ -14,27 +14,11 @@
 
 
 """
-
-# import lib
-
-# from collections import OrderedDict
-#
-# label_set = ['B_ORG','I_ORG','B_ORG','I_ORG','B_PER']
-#
-# print(label_set)
-# d = list(OrderedDict.fromkeys(label_set))
-#
-# print(d)
-
-
-import torch
-
-A = torch.tensor([1,3,2])
-
-print(A)
-
-print(A.cuda())
-
+import subprocess
+command = "python conlleval.py < predictprediction_0.csv"
+process = subprocess.Popen(command, stdout=subprocess.PIPE, shell=True)
+result = process.communicate()[0].decode("utf-8")
+print(result)
 
 
 

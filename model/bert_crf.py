@@ -21,7 +21,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from transformers import BertPreTrainedModel, BertModel
-from model.crf import CRF1
+from model.crf import CRF
 
 # torch.log_softmax()
 
@@ -40,7 +40,7 @@ class Bert_CRF(BertPreTrainedModel):
         self.classifier = nn.Linear(config.hidden_size, self.num_labels)
         self.init_weights()
 
-        self.crf = CRF1(self.num_labels, batch_first=True)
+        self.crf = CRF(self.num_labels, batch_first=True)
 
     def forward(self,
                 input_ids,
