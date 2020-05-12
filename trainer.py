@@ -164,7 +164,7 @@ class Train:
             self.model.eval()
 
             if not os.path.isdir(self.config.apr_dir):
-                shutil.rmtree(self.config.apr_dir)
+                os.mkdir(self.config.apr_dir)
 
             writer = open(os.path.join(self.config.apr_dir, 'prediction_' + str(epoch) + '.csv'), 'w', encoding='utf-8')
             for i, batch in enumerate(self.test_iter):
