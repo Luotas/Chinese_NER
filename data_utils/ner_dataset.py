@@ -20,6 +20,7 @@
 import torch.utils.data as data
 from transformers.tokenization_bert import BertTokenizer
 import linecache
+import common.hyperparameter  as hy
 
 
 class NER_Dataset(data.Dataset):
@@ -41,6 +42,7 @@ class NER_Dataset(data.Dataset):
         _sentence, _label = line.strip().split(",")
         _sentence, _label = _sentence.split(), _label.split()
 
+
         label = []
         for x in _label:
             if x in self.tag2idx.keys():
@@ -49,9 +51,9 @@ class NER_Dataset(data.Dataset):
                 label.append(self.tag2idx['O'])
         bert_tokens = []
         orig_to_tok_map = []
-        bert_tokens.append('[CLS]')
+        bert_tokens.append(hy.csl)
         # append dummy label 'X' for subtokens
-        modified_labels = [self.tag2idx['X']]
+        modified_labels = [self.tag2idx[hy.x]]
         for i, token in enumerate(_sentence):
             if len(bert_tokens) >= 512:
                 break
@@ -59,10 +61,10 @@ class NER_Dataset(data.Dataset):
             modified_labels.append(label[i])
             new_token = self.tokenizer.tokenize(token)
             bert_tokens.extend(new_token)
-            modified_labels.extend([self.tag2idx['X']] * (len(new_token) - 1))
+            modified_labels.extend([self.tag2idx[hy.x]] * (len(new_token) - 1))
 
-        bert_tokens.append('[SEP]')
-        modified_labels.append(self.tag2idx['X'])
+        bert_tokens.append(hy.sep)
+        modified_labels.append(self.tag2idx[hy.x])
         token_ids = self.tokenizer.convert_tokens_to_ids(bert_tokens)
         if len(token_ids) > 511:
             token_ids = token_ids[:512]

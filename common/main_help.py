@@ -19,15 +19,17 @@
 
 import os
 import shutil
+from tqdm import tqdm
+import numpy as np
+import torch
 
 import common.hyperparameter as hy
 
 from model.sequence_label import SequenceLabel
 from common.hyperparameter import cpu_device
+from data_utils.ner_dataset import NER_Dataset
+import torch.utils.data as data
 
-from data_utils.sequence_label_dataset import SequenceLabelingDataset
-from torch.utils.data import DataLoader
-import transformers.tokenization_bert  as tokenization
 
 
 def load_model(config):
@@ -48,8 +50,8 @@ def load_tokenizer(config):
 def load_data(config):
     if not os.path.isdir(config.pkl_directory): os.makedirs(config.pkl_directory)
 
-    train_dataLoader, test_dataloader = preprocessing(config)
-    return train_dataLoader, test_dataloader
+    train_iter, test_iter = preprocessing(config)
+    return train_iter, test_iter
 
 
 def preprocessing(config):
@@ -62,17 +64,17 @@ def preprocessing(config):
 
     save_directionary(config, tag2idx, token2idx)
 
-    ''' 2. load bert tokenizer instance '''
-    config.tokenizer = load_tokenizer(config)
+    ''' 2. create train/test dataloader'''
 
-    ''' 3. create train/test dataset'''
+    train_iter = generate_data(config,
+                               dataset_dir=config.train_dir,
+                               tag2idx=tag2idx,
+                               batch_szie=config.batch_size)
 
-    trainset = SequenceLabelingDataset(config.train_dir)
-    testset = SequenceLabelingDataset(config.test_dir)
-
-    ''' 4. initializion the dataloader for loop'''
-    train_dataLoader = DataLoader(trainset, batch_size=config.batch_size, shuffle=True)
-    test_dataloader = DataLoader(testset, batch_size=config.batch_size, shuffle=True)
+    test_iter = generate_data(config,
+                              dataset_dir=config.test_dir,
+                              tag2idx=tag2idx,
+                              batch_szie=config.test_batch_size)
 
     print('******************************')
     print(f'tag_size:{config.tag_size}')
@@ -80,17 +82,51 @@ def preprocessing(config):
     print(f'tag2idx:{config.tag2idx}')
     print('******************************')
 
-    return train_dataLoader, test_dataloader
+    return train_iter, test_iter
 
 
-from collections import OrderedDict
+def pad(batch):
+    '''Pads to the longest sample'''
+    get_element = lambda x: [sample[x] for sample in batch]
+    seq_len = get_element(1)
+    maxlen = np.array(seq_len).max()
+    do_pad = lambda x, seqlen: [sample[x] + [0] * (seqlen - len(sample[x])) for sample in batch]  # 0: <pad>
+    tok_ids = do_pad(0, maxlen)
+    attn_mask = [[(i > 0) for i in ids] for ids in tok_ids]
+    LT = torch.LongTensor
+    label = do_pad(3, maxlen)
+
+    # sort the index, attn mask and labels on token length
+    token_ids = get_element(0)
+    token_ids_len = torch.LongTensor(list(map(len, token_ids)))
+    _, sorted_idx = token_ids_len.sort(0, descending=True)
+
+    tok_ids = LT(tok_ids)[sorted_idx]
+    attn_mask = LT(attn_mask)[sorted_idx]
+    labels = LT(label)[sorted_idx]
+    org_tok_map = get_element(2)
+    sents = get_element(-1)
+
+    return tok_ids, attn_mask, org_tok_map, labels, sents, list(sorted_idx.cpu().numpy())
+
+
+def generate_data(config, dataset_dir, tag2idx, batch_szie):
+    dataset = NER_Dataset(file_path=dataset_dir,
+                          tag2idx=tag2idx,
+                          tokenizer_path=config.bert_vocab_path)
+
+    data_iter = data.DataLoader(dataset=dataset,
+                                batch_size=batch_szie,
+                                shuffle=True,
+                                num_workers=4,
+                                collate_fn=pad)
+
+    return data_iter
 
 
 def dump_tags(config):
     token2idx = {hy.pad: 0, hy.unk: 1}
-    # tag2idx = {hy.pad: 0, hy.csl: 1, hy.sep: 2}
-
-    label_set = []
+    tag2idx = {hy.pad: 0, hy.x: 1}
 
     with open(config.train_dir, "r", encoding="utf-8") as fp:
         for cursor in fp.readlines():
@@ -100,9 +136,9 @@ def dump_tags(config):
                     token2idx[tok] = len(token2idx)
 
             for tag in tags.split():
-                # if tag not in tag2idx:
-                #     tag2idx[tag] = len(tag2idx)
-                label_set.append(tag)
+                if tag not in tag2idx:
+                    tag2idx[tag] = len(tag2idx)
+                # label_set.append(tag)
 
     with open(config.test_dir, "r", encoding="utf-8") as fp:
         for cursor in fp.readlines():
@@ -111,15 +147,8 @@ def dump_tags(config):
                 if tok not in token2idx:
                     token2idx[tok] = len(token2idx)
             for tag in tags.split():
-                # if tag not in tag2idx:
-                #     tag2idx[tag] = len(tag2idx)
-                label_set.append(tag)
-
-    label_set = list(OrderedDict.fromkeys(label_set))
-
-    label_set.append('X')
-
-    tag2idx = {t: i for i, t in enumerate(label_set)}
+                if tag not in tag2idx:
+                    tag2idx[tag] = len(tag2idx)
 
     idx2tag = {}
     for k, v in tag2idx.items():
