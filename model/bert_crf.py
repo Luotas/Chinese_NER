@@ -40,8 +40,6 @@ class Bert_CRF(BertPreTrainedModel):
         self.classifier = nn.Linear(config.hidden_size, self.num_labels)
         self.init_weights()
 
-        self.crf = CRF(self.num_labels, batch_first=True)
-
     def forward(self,
                 input_ids,
                 attention_mask,
@@ -54,11 +52,14 @@ class Bert_CRF(BertPreTrainedModel):
         sequence_output = outputs[0]
         sequence_output = self.dropout(sequence_output)
         emission = self.classifier(sequence_output)
-        attn_mask = attention_mask.type(torch.uint8)
 
-        if labels is not None:
-            loss = -self.crf(log_soft(emission, 2), labels, mask=attn_mask, reduction='mean')
-            return loss
-        else:
-            prediction = self.crf.decode(emission, mask=attn_mask)
-            return prediction
+        return emission
+
+        # attn_mask = attention_mask.type(torch.uint8)
+        #
+        # if labels is not None:
+        #     loss = -self.crf(log_soft(output, 2), labels, mask=attn_mask, reduction='mean')
+        #     return loss
+        # else:
+        #     prediction = self.crf.decode(output, mask=attn_mask)
+        #     return prediction

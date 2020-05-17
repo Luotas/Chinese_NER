@@ -77,21 +77,20 @@ class Train:
 
     def _get_optimizer(self):
 
-        no_decay = ['bias', 'LayerNorm.weight']
-        optimizer_grouped_parameters = [
-            {
-                "params": [p for n, p in self.model.named_parameters() if not any(nd in n for nd in no_decay)],
-                "weight_decay": 0.0,
-            },
-            {"params": [p for n, p in self.model.named_parameters() if any(nd in n for nd in no_decay)],
-             "weight_decay": 0.0},
-        ]
-        optimizer = AdamW( optimizer_grouped_parameters,lr=self.config.learning_rate, eps=self.config.eps)
+        # no_decay = ['bias', 'LayerNorm.weight']
+        # optimizer_grouped_parameters = [
+        #     {
+        #         "params": [p for n, p in self.model.named_parameters() if not any(nd in n for nd in no_decay)],
+        #         "weight_decay": 0.0,
+        #     },
+        #     {"params": [p for n, p in self.model.named_parameters() if any(nd in n for nd in no_decay)],
+        #      "weight_decay": 0.0},
+        # ]
+        # optimizer = AdamW( optimizer_grouped_parameters,lr=self.config.learning_rate, eps=self.config.eps)
 
-        # optimizer = AdamW([{'params': self.model.bert.parameters()},
-        #                    {'params': self.model.classifier.parameters()},
-        #                    {'params': self.model.crf.parameters(), 'lr': self.config.crf_learning_rate}],
-        #                   lr=self.config.learning_rate, eps=self.config.eps)
+        optimizer = AdamW([{'params': self.model._bert.parameters()},
+                           {'params': self.model.crf.parameters(), 'lr': self.config.crf_learning_rate}],
+                          lr=self.config.learning_rate, eps=self.config.eps)
 
         return optimizer
 
@@ -107,7 +106,7 @@ class Train:
         device = self.config.device
         global_step = 0
 
-        for param in list(self.model.parameters())[:-21]:
+        for param in list(self.model.parameters())[:-23]:
             param.requires_grad = False
 
         for name, param in self.model.named_parameters():
@@ -208,7 +207,7 @@ class Train:
             result = process.communicate()[0].decode("utf-8")
             print(result)
 
-            writer = open(os.path.join(self.config.apr_dir, 'result' + str(epoch) + '.text'), 'w', encoding='utf-8')
+            writer = open(os.path.join(self.config.apr_dir, 'result' + str(epoch) + '.txt'), 'w', encoding='utf-8')
             writer.write(result)
             writer.flush()
 

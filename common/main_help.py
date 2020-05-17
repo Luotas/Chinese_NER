@@ -29,19 +29,22 @@ from common.hyperparameter import cpu_device
 from data_utils.ner_dataset import NER_Dataset
 import torch.utils.data as data
 
-from model.bert_crf import Bert_CRF
+from model.sequence_label import Sequence_Label
+
+
 
 
 def load_model(config):
 
-    model = Bert_CRF.from_pretrained(config.bert_model_dir,num_labels = len(config.tag2idx))
+
+    model = Sequence_Label(config)
+
+    # model = Bert_CRF.from_pretrained(config.bert_model_dir,num_labels = len(config.tag2idx))
 
     if config.device != cpu_device:
         model = model.to(device=config.device)
 
     return model
-
-
 
 
 def load_data(config):
