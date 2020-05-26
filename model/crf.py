@@ -12,7 +12,7 @@
 """
 文档说明：
 
-REFERENCE : https://github.com/jiesutd/NCRFpp/blob/master/model/crf.py
+REFERENCE : https://github.com/kmkurn/pytorch-crf/tree/master/torchcrf
 
 
 """
@@ -91,8 +91,8 @@ class CRF(nn.Module):
                 if ``batch_first`` is ``False``, ``(batch_size, seq_length)`` otherwise.
             reduction: Specifies  the reduction to apply to the output:
                 ``none|sum|mean|token_mean``. ``none``: no reduction will be applied.
-                ``sum``: the output will be summed over batches. ``mean``: the output will be
-                averaged over batches. ``token_mean``: the output will be averaged over tokens.
+                ``sum``: the output will be summed over batches. ``mean``: the output will  averaged over tokens.be
+                averaged over batches. ``token_mean``: the output will be
         Returns:
             `~torch.Tensor`: The log likelihood. This will have size ``(batch_size,)`` if
             reduction is ``none``, ``()`` otherwise.
